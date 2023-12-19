@@ -26,8 +26,20 @@ class XMLConversionTestCase(TestCase):
                 'file': fp,
             })
             self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.headers['content-type'], 'application/json')
             self.assertEqual(response.json(), {
                 "Root": "",
+            })
+
+    def test_api_convert_malformed_document(self):
+        with (TEST_DIR / Path('malformed.xml')).open() as fp:
+            response = self.client.post('/api/converter/convert/', {
+                'file': fp,
+            })
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(response.headers['content-type'], 'application/json')
+            self.assertEqual(response.json(), {
+                "detail": "XML parse error - not well-formed (invalid token): line 1, column 1",
             })
 
     def test_connected_convert_addresses(self):
@@ -36,6 +48,35 @@ class XMLConversionTestCase(TestCase):
                 'file': fp,
             })
             self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json(), {
+                "Root": [
+                    {
+                        "Address": [
+                            {"StreetLine1": "123 Main St."},
+                            {"StreetLine2": "Suite 400"},
+                            {"City": "San Francisco"},
+                            {"State": "CA"},
+                            {"PostCode": "94103"},
+                        ]
+                    },
+                    {
+                        "Address": [
+                            {"StreetLine1": "400 Market St."},
+                            {"City": "San Francisco"},
+                            {"State": "CA"},
+                            {"PostCode": "94108"},
+                        ]
+                    },
+                ],
+            })
+
+    def test_api_convert_convert_addresses(self):
+        with (TEST_DIR / Path('addresses.xml')).open() as fp:
+            response = self.client.post('/api/converter/convert/', {
+                'file': fp,
+            })
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.headers['content-type'], 'application/json')
             self.assertEqual(response.json(), {
                 "Root": [
                     {

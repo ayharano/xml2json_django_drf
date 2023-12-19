@@ -1,10 +1,48 @@
 <html>
     <head></head>
     <body>
-        <p>
-            Modify this page to include a form where users can submit an XML file.
-            When they click on the submit button, the XML file should be converted into JSON and
-            returned to the user.
-        </p>
+        <h1>Simple XML to JSON coverter</h1>
+        <h2>Upload form</h2>
+        <form method="post" enctype="multipart/form-data" id="xmluploader">
+            {% csrf_token %}
+
+            <label for="file" id="labelFile" name="labelFile">Select XML file to convert:</label>
+            <input type="file" id="file" name="file" accept=".xml" required /><br/>
+            <br/>
+            <input type="submit" id="submit" name="submit" value="Submit" /><br/>
+        </form><br />
+        <h2>Output</h2>
+        Status code:&nbsp;<span id="statusCode" name="statusCode">?</span><br/>
+        <br/>
+        <textarea id="output" name="output" rows="24" cols="80" placeholder="Rendered JSON output" wrap readonly></textarea>
     </body>
+    <script>
+const form = document.querySelector("form#xmluploader");
+const statusCode = document.querySelector("span#statusCode");
+const output = document.querySelector("textarea#output");
+
+async function renderData() {
+  // Associate the FormData object with the form element
+  const formData = new FormData(form);
+
+  try {
+    const response = await fetch(window.location.href, {
+      method: "POST",
+      body: formData,
+    });
+    output.value = JSON.stringify(await response.json());
+    statusCode.innerText = response.status + " " + response.statusText;
+  } catch (e) {
+    output.value = e;
+  }
+}
+
+// Take over form submission
+form.addEventListener("submit", (event) => {
+  output.value = '';
+  statusCode.innerText = '?';
+  event.preventDefault();
+  renderData();
+});
+    </script>
 </html>

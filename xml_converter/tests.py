@@ -20,6 +20,27 @@ class XMLConversionTestCase(TestCase):
                 "Root": "",
             })
 
+    def test_connected_convert_missing_document(self):
+        response = self.client.post('/connected/')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(), {
+            "detail": {
+                "file": [
+                    "This field is required.",
+                ],
+            },
+        })
+
+    def test_connected_convert_malformed_document(self):
+        with (TEST_DIR / Path('malformed.xml')).open() as fp:
+            response = self.client.post('/connected/', {
+                'file': fp,
+            })
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(response.json(), {
+                "detail": "XML parse error - not well-formed (invalid token): line 1, column 1",
+            })
+
     def test_api_convert_empty_document(self):
         with (TEST_DIR / Path('empty.xml')).open() as fp:
             response = self.client.post('/api/converter/convert/', {
